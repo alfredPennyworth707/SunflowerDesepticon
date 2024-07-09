@@ -51,19 +51,68 @@
         // Function to handle received data
         function handleReceivedData(data) {
             console.log("Received data:", data);
-            if (data.startsWith('https://')) {
-                screenshot.src = data;
-                screenshot.style.display = 'block';
+            try {
+                const parsedData = JSON.parse(data);
+                if (parsedData.action === 'screenshot' && parsedData.url) {
+                    screenshot.src = parsedData.url;
+                    screenshot.style.display = 'block';
+                    console.log("Set screenshot URL:", parsedData.url);
+                }
+            } catch (error) {
+                console.error("Error parsing received data:", error);
             }
         }
 
         // Listen for messages from the bot
-        Telegram.WebApp.onEvent('message', function(message) {
-            console.log("Received message:", message);
-            if (typeof message === 'string') {
-                handleReceivedData(message);
-            }
+        Telegram.WebApp.onEvent('mainButtonClicked', function() {
+            Telegram.WebApp.close();
         });
+
+        Telegram.WebApp.onEvent('viewportChanged', function() {
+            Telegram.WebApp.expand();
+        });
+
+        Telegram.WebApp.onEvent('backButtonClicked', function() {
+            Telegram.WebApp.close();
+        });
+
+        Telegram.WebApp.onEvent('settingsButtonClicked', function() {
+            // Handle settings button click if needed
+        });
+
+        Telegram.WebApp.onEvent('invoiceClosed', function(status) {
+            // Handle invoice closure if needed
+        });
+
+        Telegram.WebApp.onEvent('popupClosed', function(id) {
+            // Handle popup closure if needed
+        });
+
+        Telegram.WebApp.onEvent('qrTextReceived', function(data) {
+            // Handle QR text if needed
+        });
+
+        Telegram.WebApp.onEvent('clipboardTextReceived', function(data) {
+            // Handle clipboard text if needed
+        });
+
+        Telegram.WebApp.onEvent('writeAccessRequested', function(data) {
+            // Handle write access request if needed
+        });
+
+        Telegram.WebApp.onEvent('contactRequested', function(data) {
+            // Handle contact request if needed
+        });
+
+        Telegram.WebApp.onEvent('themeChanged', function() {
+            // Handle theme change if needed
+        });
+
+        Telegram.WebApp.onEvent('viewportChanged', function(isStateStable) {
+            // Handle viewport change if needed
+        });
+
+        Telegram.WebApp.onEvent('message', handleReceivedData);
 
         screenshot.addEventListener('click', function(event) {
             const rect = screenshot.getBoundingClientRect();
