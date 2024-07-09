@@ -50,19 +50,16 @@
 
         // Function to handle received data
         function handleReceivedData(data) {
-            try {
-                const parsedData = JSON.parse(data);
-                if (parsedData.action === 'screenshot' && parsedData.image_url) {
-                    screenshot.src = parsedData.image_url;
-                    screenshot.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error parsing received data:', error);
+            console.log("Received data:", data);
+            if (data.startsWith('https://')) {
+                screenshot.src = data;
+                screenshot.style.display = 'block';
             }
         }
 
         // Listen for messages from the bot
         Telegram.WebApp.onEvent('message', function(message) {
+            console.log("Received message:", message);
             if (typeof message === 'string') {
                 handleReceivedData(message);
             }
