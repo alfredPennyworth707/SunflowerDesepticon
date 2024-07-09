@@ -48,22 +48,17 @@
         // Function to handle received data
         function handleReceivedData(data) {
             console.log("Received data:", data);
-            if (data.startsWith('https://')) {
-                screenshot.src = data;
+            if (data.url && data.url.startsWith('https://')) {
+                screenshot.src = data.url;
                 screenshot.style.display = 'block';
             }
         }
 
-        // Listen for messages from the bot
-        Telegram.WebApp.onEvent('message', function(message) {
+        // Read initial data from WebApp launch parameters
+        Telegram.WebApp.onEvent('web_app_data', function(message) {
             console.log("Received message:", message);
-            if (typeof message === 'string') {
-                handleReceivedData(message);
-            }
+            handleReceivedData(message);
         });
-
-        // Request screenshot when the WebApp loads
-        Telegram.WebApp.sendData(JSON.stringify({action: 'screenshot'}));
 
         screenshot.addEventListener('click', function(event) {
             const rect = screenshot.getBoundingClientRect();
