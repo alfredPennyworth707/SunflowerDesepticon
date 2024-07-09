@@ -40,21 +40,31 @@
         <img id="screenshot" src="" alt="Screenshot">
         <div id="coordinates"></div>
     </div>
-
     <script type="text/javascript">
         Telegram.WebApp.ready();
-
         const screenshot = document.getElementById('screenshot');
         const coordinates = document.getElementById('coordinates');
 
         // Request screenshot when the WebApp loads
         Telegram.WebApp.sendData(JSON.stringify({action: 'screenshot'}));
 
+        // Function to handle received data
+        function handleReceivedData(data) {
+            try {
+                const parsedData = JSON.parse(data);
+                if (parsedData.action === 'screenshot' && parsedData.image_url) {
+                    screenshot.src = parsedData.image_url;
+                    screenshot.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error parsing received data:', error);
+            }
+        }
+
         // Listen for messages from the bot
         Telegram.WebApp.onEvent('message', function(message) {
-            if (message.photo) {
-                screenshot.src = message.photo[0].file_id;
-                screenshot.style.display = 'block';
+            if (typeof message === 'string') {
+                handleReceivedData(message);
             }
         });
 
