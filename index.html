@@ -45,20 +45,26 @@
         const screenshot = document.getElementById('screenshot');
         const coordinates = document.getElementById('coordinates');
 
+        // Function to get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
         // Function to handle received data
-        function handleReceivedData(data) {
-            console.log("Received data:", data);
-            if (data.url && data.url.startsWith('https://')) {
-                screenshot.src = data.url;
+        function handleReceivedData(url) {
+            console.log("Received URL:", url);
+            if (url && url.startsWith('https://')) {
+                screenshot.src = url;
                 screenshot.style.display = 'block';
             }
         }
 
         // Read initial data from WebApp launch parameters
-        Telegram.WebApp.onEvent('web_app_data', function(message) {
-            console.log("Received message:", message);
-            handleReceivedData(message);
-        });
+        const url = getUrlParameter('url');
+        handleReceivedData(url);
 
         screenshot.addEventListener('click', function(event) {
             const rect = screenshot.getBoundingClientRect();
