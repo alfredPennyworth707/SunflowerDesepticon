@@ -47,22 +47,35 @@
         .button:hover {
             background-color: #0056b3;
         }
+        .coordinates-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <button id="requestScreenshotButton" class="button">Request Screenshot</button>
     <button id="loadImageButton" class="button">Load Image from URL</button>
+    <button id="sendCoordinatesButton" class="button" style="display:none;">Send Coordinates</button>
     <div id="screenshotContainer">
         <img id="screenshot" src="" alt="Screenshot">
-        <div id="coordinates"></div>
+        <div id="coordinates">
+            <ul class="coordinates-list" id="coordinatesList"></ul>
+        </div>
     </div>
     <script type="text/javascript">
         Telegram.WebApp.ready();
 
         const requestScreenshotButton = document.getElementById('requestScreenshotButton');
         const loadImageButton = document.getElementById('loadImageButton');
+        const sendCoordinatesButton = document.getElementById('sendCoordinatesButton');
         const screenshot = document.getElementById('screenshot');
         const coordinates = document.getElementById('coordinates');
+        const coordinatesList = document.getElementById('coordinatesList');
+        
+        let coordinatesArray = [];
 
         requestScreenshotButton.addEventListener('click', function() {
             Telegram.WebApp.sendData(JSON.stringify({ action: 'request_screenshot' }));
@@ -78,20 +91,48 @@
             }
         });
 
+        screenshot.addEventListener('load', function() {
+            // Save original dimensions of the image
+            screenshot.dataset.originalWidth = screenshot.naturalWidth;
+            screenshot.dataset.originalHeight = screenshot.naturalHeight;
+        });
+
         screenshot.addEventListener('click', function(event) {
             const rect = screenshot.getBoundingClientRect();
-            const x = Math.round(event.clientX - rect.left);
-            const y = Math.round(event.clientY - rect.top);
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
             
-            coordinates.textContent = `X: ${x}, Y: ${y}`;
+            const originalWidth = screenshot.dataset.originalWidth;
+            const originalHeight = screenshot.dataset.originalHeight;
+            const displayedWidth = screenshot.width;
+            const displayedHeight = screenshot.height;
+
+            const relativeX = Math.round(x * (originalWidth / displayedWidth));
+            const relativeY = Math.round(y * (originalHeight / displayedHeight));
             
-            // Send coordinates to the bot
+            coordinatesArray.push({ x: relativeX, y: relativeY });
+            updateCoordinatesList();
+
+            if (coordinatesArray.length > 0) {
+                sendCoordinatesButton.style.display = 'block';
+            }
+        });
+
+        sendCoordinatesButton.addEventListener('click', function() {
             Telegram.WebApp.sendData(JSON.stringify({
-                action: 'coordinates',
-                x: x,
-                y: y
+                action: 'coordinates_batch',
+                coordinates: coordinatesArray
             }));
         });
+
+        function updateCoordinatesList() {
+            coordinatesList.innerHTML = '';
+            coordinatesArray.forEach((coord, index) => {
+                const li = document.createElement('li');
+                li.textContent = `Coordinate ${index + 1}: X: ${coord.x}, Y: ${coord.y}`;
+                coordinatesList.appendChild(li);
+            });
+        }
 
         Telegram.WebApp.MainButton.setText('Close').show().onClick(function () {
             Telegram.WebApp.close();
