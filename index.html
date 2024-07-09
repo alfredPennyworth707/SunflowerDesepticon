@@ -10,6 +10,7 @@
             padding: 0;
             height: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: var(--tg-theme-bg-color);
@@ -18,6 +19,7 @@
             position: relative;
             max-width: 90vw;
             max-height: 80vh;
+            margin-top: 20px;
         }
         #screenshot {
             max-width: 100%;
@@ -33,38 +35,48 @@
             padding: 5px;
             border-radius: 5px;
         }
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
+    <button id="requestScreenshotButton" class="button">Request Screenshot</button>
+    <button id="loadImageButton" class="button">Load Image from URL</button>
     <div id="screenshotContainer">
         <img id="screenshot" src="" alt="Screenshot">
         <div id="coordinates"></div>
     </div>
     <script type="text/javascript">
         Telegram.WebApp.ready();
+
+        const requestScreenshotButton = document.getElementById('requestScreenshotButton');
+        const loadImageButton = document.getElementById('loadImageButton');
         const screenshot = document.getElementById('screenshot');
         const coordinates = document.getElementById('coordinates');
 
-        // Function to get URL parameters
-        function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            const results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
+        requestScreenshotButton.addEventListener('click', function() {
+            Telegram.WebApp.sendData(JSON.stringify({ action: 'request_screenshot' }));
+        });
 
-        // Function to handle received data
-        function handleReceivedData(url) {
-            console.log("Received URL:", url);
+        loadImageButton.addEventListener('click', function() {
+            const url = prompt("Enter the URL of the image:");
             if (url && url.startsWith('https://')) {
                 screenshot.src = url;
                 screenshot.style.display = 'block';
+            } else {
+                alert("Please enter a valid URL.");
             }
-        }
-
-        // Read initial data from WebApp launch parameters
-        const url = getUrlParameter('url');
-        handleReceivedData(url);
+        });
 
         screenshot.addEventListener('click', function(event) {
             const rect = screenshot.getBoundingClientRect();
