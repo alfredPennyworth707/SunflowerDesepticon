@@ -15,25 +15,33 @@
             align-items: center;
             background-color: var(--tg-theme-bg-color);
         }
+        #buttonsContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #coordinatesList {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+            color: white;
+        }
         #screenshotContainer {
             position: relative;
             max-width: 90vw;
             max-height: 80vh;
-            margin-top: 20px;
         }
         #screenshot {
             max-width: 100%;
             max-height: 100%;
             display: none;
         }
-        #coordinates {
+        .coordinate-dot {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px;
-            border-radius: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
         }
         .button {
             padding: 10px 20px;
@@ -47,23 +55,17 @@
         .button:hover {
             background-color: #0056b3;
         }
-        .coordinates-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            color: white;
-        }
     </style>
 </head>
 <body>
-    <button id="requestScreenshotButton" class="button">Request Screenshot</button>
-    <button id="loadImageButton" class="button">Load Image from URL</button>
-    <button id="sendCoordinatesButton" class="button" style="display:none;">Send Coordinates</button>
+    <div id="buttonsContainer">
+        <button id="requestScreenshotButton" class="button">Request Screenshot</button>
+        <button id="loadImageButton" class="button">Load Image from URL</button>
+        <button id="sendCoordinatesButton" class="button" style="display:none;">Send Coordinates</button>
+        <ul class="coordinates-list" id="coordinatesList"></ul>
+    </div>
     <div id="screenshotContainer">
         <img id="screenshot" src="" alt="Screenshot">
-        <div id="coordinates">
-            <ul class="coordinates-list" id="coordinatesList"></ul>
-        </div>
     </div>
     <script type="text/javascript">
         Telegram.WebApp.ready();
@@ -72,10 +74,19 @@
         const loadImageButton = document.getElementById('loadImageButton');
         const sendCoordinatesButton = document.getElementById('sendCoordinatesButton');
         const screenshot = document.getElementById('screenshot');
-        const coordinates = document.getElementById('coordinates');
         const coordinatesList = document.getElementById('coordinatesList');
-
+        const screenshotContainer = document.getElementById('screenshotContainer');
+        
         let coordinatesArray = [];
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
 
         requestScreenshotButton.addEventListener('click', function() {
             Telegram.WebApp.sendData(JSON.stringify({ action: 'request_screenshot' }));
@@ -101,7 +112,7 @@
             const rect = screenshot.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-
+            
             const originalWidth = screenshot.dataset.originalWidth;
             const originalHeight = screenshot.dataset.originalHeight;
             const displayedWidth = screenshot.width;
@@ -109,8 +120,11 @@
 
             const relativeX = Math.round(x * (originalWidth / displayedWidth));
             const relativeY = Math.round(y * (originalHeight / displayedHeight));
+            
+            const color = getRandomColor();
 
-            coordinatesArray.push({ x: relativeX, y: relativeY });
+            coordinatesArray.push({ x: relativeX, y: relativeY, color: color });
+            drawDot(x, y, color);
             updateCoordinatesList();
 
             if (coordinatesArray.length > 0) {
@@ -125,11 +139,28 @@
             }));
         });
 
+        function drawDot(x, y, color) {
+            const dot = document.createElement('div');
+            dot.classList.add('coordinate-dot');
+            dot.style.left = `${x - 5}px`;
+            dot.style.top = `${y - 5}px`;  // Center the dot at the click point
+            dot.style.backgroundColor = color;
+            screenshotContainer.appendChild(dot);
+        }
+
         function updateCoordinatesList() {
             coordinatesList.innerHTML = '';
             coordinatesArray.forEach((coord, index) => {
                 const li = document.createElement('li');
-                li.textContent = `Coordinate ${index + 1}: X: ${coord.x}, Y: ${coord.y}`;
+                const colorBox = document.createElement('span');
+                colorBox.style.backgroundColor = coord.color;
+                colorBox.style.width = '10px';
+                colorBox.style.height = '10px';
+                colorBox.style.display = 'inline-block';
+                colorBox.style.marginRight = '5px';
+
+                li.appendChild(colorBox);
+                li.appendChild(document.createTextNode(`Coordinate ${index + 1}: X: ${coord.x}, Y: ${coord.y}`));
                 coordinatesList.appendChild(li);
             });
         }
